@@ -134,6 +134,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="app.manifest" />
+    <None Include="Content\level1.tmx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PlatformLibrary\PlatformLibrary.csproj">

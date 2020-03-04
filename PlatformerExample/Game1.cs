@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
+using System;
 using PlatformLibrary;
 
 namespace PlatformerExample
@@ -13,6 +14,12 @@ namespace PlatformerExample
     /// </summary>
     public class Game1 : Game
     {
+        enum ViewState
+        {
+            IDLE,
+            DEAD,
+        }
+        ViewState view = ViewState.IDLE;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         SpriteSheet sheet;
@@ -20,7 +27,15 @@ namespace PlatformerExample
         Tilemap tilemap;
         Player player;
         List<Platform> platforms;
+        Platform curPlatform;
         AxisList world;
+        KeyboardState oldKS;
+        KeyboardState newKS;
+        float deathY = 600;
+        Random random = new Random();
+        SpriteFont font;
+        int score = 0;
+        Texture2D death;
 
         public Game1()
         {
@@ -38,6 +53,9 @@ namespace PlatformerExample
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
+            graphics.PreferredBackBufferWidth = 400;
+            graphics.PreferredBackBufferHeight = 600;
+            graphics.ApplyChanges();
 
             base.Initialize();
         }
@@ -53,6 +71,8 @@ namespace PlatformerExample
 #endif
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
+            font = Content.Load<SpriteFont>("font");
+            death = Content.Load<Texture2D>("death");
 
             // TODO: use this.Content to load your game content here
             var t = Content.Load<Texture2D>("spritesheet");
@@ -60,15 +80,17 @@ namespace PlatformerExample
 
             // Create the player with the corresponding frames from the spritesheet
             var playerFrames = from index in Enumerable.Range(19, 30) select sheet[index];
-            player = new Player(playerFrames);
+
 
             // Load the level
             tilemap = Content.Load<Tilemap>("level1");
+            Vector2 x = tilemap.GetStartingPosition();
+            player = new Player(playerFrames, new Vector2(350, 375));
 
-
+            platforms.Add(new Platform(new BoundingRectangle(280, 500, 84, 21), sheet[1]));
             platforms.Add(new Platform(new BoundingRectangle(80, 300, 105, 21), sheet[1]));
-            platforms.Add(new Platform(new BoundingRectangle(280, 400, 84, 21), sheet[2]));
-            platforms.Add(new Platform(new BoundingRectangle(160, 200, 42, 21), sheet[3]));
+            platforms.Add(new Platform(new BoundingRectangle(80, 100, 105, 21), sheet[1]));
+            curPlatform = platforms[0];
 
             // Add the platforms to the axis list
             world = new AxisList();
@@ -77,7 +99,7 @@ namespace PlatformerExample
                 world.AddGameObject(platform);
             }
 
-            tileset = Content.Load<Tileset>("tiledspritesheet"); 
+            tileset = Content.Load<Tileset>("tiledspritesheet");
         }
 
         /// <summary>
@@ -101,12 +123,38 @@ namespace PlatformerExample
 
             // TODO: Add your update logic here
             player.Update(gameTime);
+            if (player.Position.Y > deathY)
+            {
+                view = ViewState.DEAD;
+            }
 
             // Check for platform collisions
             var platformQuery = world.QueryRange(player.Bounds.X, player.Bounds.X + player.Bounds.Width);
-            player.CheckForPlatformCollision(platformQuery);
-            
+            player.CheckForPlatformCollision(platforms);
+            foreach (Platform p in platforms)
+            {
+                p.Update(gameTime);
+                if (player.Position.Y + 100 < p.Position.Y && player.verticalState == VerticalMovementState.OnGround)
+                {
+                    PlatformShift(p);
+                    return;
+                }
+                Debug.WriteLine($"{p.Position}\t{p.Velocity}");
+            }
+            curPlatform = platforms[0];
+            curPlatform.Velocity = Vector2.Zero;
             base.Update(gameTime);
+        }
+
+        public void PlatformShift(Platform p)
+        {
+            deathY = p.bounds.Y;
+            platforms.Add(new Platform(new BoundingRectangle((float)random.Next(0, 400 - (int)p.bounds.Width), platforms[2].Position.Y - 200,
+                                                            p.Bounds.Width, p.Bounds.Height),
+                                                        sheet[1]));
+            score++;
+            p.bounds.X = -1000;
+            platforms.Remove(p);
         }
 
         /// <summary>
@@ -115,36 +163,42 @@ namespace PlatformerExample
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.White);
 
-            // Calculate and apply the world/view transform
-            var offset = new Vector2(200, 300) - player.Position;
-            var t = Matrix.CreateTranslation(offset.X, offset.Y, 0);
-            spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null,null, t);
-
-            // Draw the tilemap 
-            tilemap.Draw(spriteBatch);
-
-            // Draw the platforms 
-            var platformQuery = world.QueryRange(player.Position.X - 221, player.Position.X + 400);
-            foreach(Platform platform in platformQuery)
-            {   
-                platform.Draw(spriteBatch);
-            }
-            Debug.WriteLine($"{platformQuery.Count()} Platforms rendered");
-            
-            // Draw the player
-            player.Draw(spriteBatch);
-            
-            // Draw an arbitrary range of sprites and corresponding tiles
-            for(var i = 17; i < 30; i++)
+            switch (view)
             {
-                sheet[i].Draw(spriteBatch, new Vector2(i*25, 25), Color.White);
-                tileset[i].Draw(spriteBatch, new Vector2(i * 25, 50), Color.White);
+                case ViewState.IDLE:
+                    spriteBatch.Begin();
+                    //Draw the tilemap
+                    tilemap.Draw(spriteBatch);
+                    spriteBatch.DrawString(font, "Score: " + score.ToString(), new Vector2(10, 10), Color.Black);
+                    spriteBatch.End();
+
+                    var offset = new Vector2(curPlatform.Position.X, graphics.GraphicsDevice.Viewport.Height - 100) - curPlatform.Position;
+                    var t = Matrix.CreateTranslation(offset.X, offset.Y, 0);
+                    spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, t);
+
+                    // Draw the platforms 
+                    foreach (Platform platform in platforms)
+                    {
+                        platform.Draw(spriteBatch);
+                    }
+                    Debug.WriteLine($"{platforms.Count()} Platforms rendered");
+
+                    // Draw the player
+                    player.Draw(spriteBatch);
+
+                    spriteBatch.End();
+                    break;
+                case ViewState.DEAD:
+                    spriteBatch.Begin();
+                    spriteBatch.Draw(death, new Rectangle(0, 0, 400, 400), Color.White);
+                    spriteBatch.DrawString(font, "Score: " + score.ToString(), new Vector2(150, 500), Color.Black);
+                    spriteBatch.End();
+                    break;
             }
 
 
-            spriteBatch.End();
 
             base.Draw(gameTime);
         }

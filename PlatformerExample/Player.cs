@@ -28,7 +28,7 @@ namespace PlatformerExample
     /// <summary>
     /// An enumeration of possible player veritcal movement states
     /// </summary>
-    enum VerticalMovementState
+    public enum VerticalMovementState
     {
         OnGround,
         Jumping,
@@ -58,8 +58,12 @@ namespace PlatformerExample
         // The player's speed
         int speed = 3;
 
+        KeyboardState newKS = Keyboard.GetState();
+        KeyboardState oldKS;
+        
+
         // The player's vertical movement state
-        VerticalMovementState verticalState = VerticalMovementState.OnGround;
+        public VerticalMovementState verticalState = VerticalMovementState.OnGround;
 
         // A timer for jumping
         TimeSpan jumpTimer;
@@ -79,18 +83,19 @@ namespace PlatformerExample
         /// <summary>
         /// Gets and sets the position of the player on-screen
         /// </summary>
-        public Vector2 Position = new Vector2(200, 200);
+        public Vector2 Position;
 
-        public BoundingRectangle Bounds => new BoundingRectangle(Position - 1.8f * origin, 38, 41);
+        public BoundingRectangle Bounds => new BoundingRectangle((Position - 1.8f * origin).X + 9f, (Position - 1.8f * origin).Y + 30f, 20, 10);
 
         /// <summary>
         /// Constructs a new player
         /// </summary>
         /// <param name="frames">The sprite frames associated with the player</param>
-        public Player(IEnumerable<Sprite> frames)
+        public Player(IEnumerable<Sprite> frames, Vector2 startingPosition)
         {
             this.frames = frames.ToArray();
             animationState = PlayerAnimState.WalkingLeft;
+            Position = startingPosition;
         }
 
         /// <summary>
@@ -99,13 +104,14 @@ namespace PlatformerExample
         /// <param name="gameTime">The GameTime object</param>
         public void Update(GameTime gameTime)
         {
-            var keyboard = Keyboard.GetState();
+            oldKS = newKS;
+            newKS = Keyboard.GetState();
 
             // Vertical movement
             switch(verticalState)
             {
                 case VerticalMovementState.OnGround:
-                    if(keyboard.IsKeyDown(Keys.Space))
+                    if(newKS.IsKeyDown(Keys.Space) && !oldKS.IsKeyDown(Keys.Space))
                     {
                         verticalState = VerticalMovementState.Jumping;
                         jumpTimer = new TimeSpan(0);
@@ -114,29 +120,29 @@ namespace PlatformerExample
                 case VerticalMovementState.Jumping:
                     jumpTimer += gameTime.ElapsedGameTime;
                     // Simple jumping with platformer physics
-                    Position.Y -= (250 / (float)jumpTimer.TotalMilliseconds);
+                    Position.Y -= (1000 / (float)jumpTimer.TotalMilliseconds);
                     if (jumpTimer.TotalMilliseconds >= JUMP_TIME) verticalState = VerticalMovementState.Falling;
                     break;
                 case VerticalMovementState.Falling:
-                    Position.Y += speed;
+                    Position.Y += speed*2;
                     // TODO: This needs to be replaced with collision logic
-                    if (Position.Y > 500)
+                    if (Position.Y > 650)
                     {
-                        Position.Y = 500;
+                        Position.Y = 650;
                     }
                     break;
             }
             
 
             // Horizontal movement
-            if (keyboard.IsKeyDown(Keys.Left))
+            if (newKS.IsKeyDown(Keys.Left))
             {
                 if (verticalState == VerticalMovementState.Jumping || verticalState == VerticalMovementState.Falling) 
                     animationState = PlayerAnimState.JumpingLeft;
                 else animationState = PlayerAnimState.WalkingLeft;
                 Position.X -= speed;
             }
-            else if(keyboard.IsKeyDown(Keys.Right))
+            else if(newKS.IsKeyDown(Keys.Right))
             {
                 if (verticalState == VerticalMovementState.Jumping || verticalState == VerticalMovementState.Falling)
                     animationState = PlayerAnimState.JumpingRight;
@@ -147,9 +153,19 @@ namespace PlatformerExample
             {
                 animationState = PlayerAnimState.Idle;
             }
+            if (Position.X < 20)
+            {
+                float delta = 20 - Position.X;
+                Position.X += delta;
+            }
+            if (Position.X > 380)
+            {
+                float delta = 380 - Position.X;
+                Position.X += delta;
+            }
 
             // Apply animations
-            switch(animationState)
+            switch (animationState)
             {
                 case PlayerAnimState.Idle:
                     currentFrame = 0;

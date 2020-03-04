@@ -17,7 +17,7 @@ namespace PlatformerExample
         /// <summary>
         /// The platform's bounds
         /// </summary>
-        BoundingRectangle bounds;
+        public BoundingRectangle bounds;
 
         /// <summary>
         /// The platform's sprite
@@ -30,9 +30,14 @@ namespace PlatformerExample
         int tileCount;
 
         /// <summary>
-        /// The bounding rectangle of the 
+        /// The bounding rectangle of the platform
         /// </summary>
         public BoundingRectangle Bounds => bounds;
+
+        public Vector2 Velocity;
+        public Vector2 Position;
+
+        Random random = new Random();
 
         /// <summary>
         /// Constructs a new platform
@@ -42,8 +47,26 @@ namespace PlatformerExample
         public Platform(BoundingRectangle bounds, Sprite sprite)
         {
             this.bounds = bounds;
+            Position = new Vector2(bounds.X, bounds.Y);
             this.sprite = sprite;
             tileCount = (int)bounds.Width / sprite.Width;
+            Velocity.X = (float)random.NextDouble();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="gameTime"></param>
+        public void Update(GameTime gameTime)
+        {
+            if(Position.X < 0 || Position.X > 400 - bounds.Width)
+            {
+                Velocity.X *= -1;
+            }
+
+            Position += (float)gameTime.ElapsedGameTime.TotalMilliseconds * Velocity;
+            bounds.X = Position.X;
+            bounds.Y = Position.Y;            
         }
 
         /// <summary>

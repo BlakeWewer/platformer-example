@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace PlatformLibrary
 {
@@ -49,6 +50,14 @@ namespace PlatformLibrary
             this.tileHeight = tileHeight;
             this.layers = layers;
             this.tiles = tiles;
+        }
+
+        public Vector2 GetStartingPosition()
+        {
+            var layer = layers[0];
+            System.Diagnostics.Debug.WriteLine(layer.Data[0].ToString());
+            //Vector2 startingPosition = layer.Data[0].ToString();
+            return Vector2.Zero;
         }
 
         #endregion
