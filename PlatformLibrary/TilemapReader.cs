@@ -27,6 +27,7 @@ namespace PlatformLibrary
             // Read the layer count and create collections to hold layers
             var layerCount = input.ReadInt32();
             var layers = new TilemapLayer[layerCount];
+            var objects = new List<TilemapObject>();
             var layersById = new Dictionary<uint, TilemapLayer>();
             var layersByName = new Dictionary<string, TilemapLayer>();
 
@@ -44,7 +45,7 @@ namespace PlatformLibrary
                 layers[i] = new TilemapLayer(layerData);
                 //layersById[layerId] = layers[i];
                 //layersByName[layerName] = layers[i];
-            }
+            }            
 
             // Read the tileset data
             var tiles = new List<Tile>() { new Tile() };
@@ -60,9 +61,12 @@ namespace PlatformLibrary
                     tiles.Add(tileset[j]);
                 }
             }
+            
+            objects.Add(new TilemapObject(350, 375));
+            //objects.Add(new TilemapObject(input.ReadUInt32(), input.ReadUInt32()));
 
             // Construct and return the tilemap
-            return new Tilemap(mapWidth, mapHeight, tileWidth, tileHeight, layers, tiles.ToArray());
+            return new Tilemap(mapWidth, mapHeight, tileWidth, tileHeight, layers, objects.ToArray(), tiles.ToArray());
         }
     }
 }

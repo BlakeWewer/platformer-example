@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Content.Pipeline.Processors;
 using Microsoft.Xna.Framework.Content.Pipeline.Serialization.Compiler;
 
 using TWrite = PlatformerContentExtension.TilemapContent;
+using System.Diagnostics;
 
 namespace PlatformerContentExtension
 {
@@ -50,6 +51,16 @@ namespace PlatformerContentExtension
                 {
                     output.Write(id);
                 }
+            }
+
+            foreach(var obj in value.Objects)
+            {
+                if(obj is null)
+                {
+                    Debug.WriteLine("obj is null");
+                }
+                output.Write(obj.X);
+                output.Write(obj.Y);
             }
 
             // Write the tileset data 

@@ -81,6 +81,26 @@ namespace PlatformerContentExtension
                     DataString = dataString
                 });
             }
+            
+            XmlNodeList objects = map.SelectNodes("//object");
+            foreach(XmlNode obj in objects)
+            {
+                var id = uint.Parse(obj.Attributes["id"].Value);
+                var name = obj.Attributes["name"].Value;
+                var type = obj.Attributes["type"].Value;
+                var x = uint.Parse(obj.Attributes["x"].Value);
+                var y = uint.Parse(obj.Attributes["y"].Value);
+
+
+                output.Objects.Add(new TilemapObjectContent()
+                {
+                    Id = id,
+                    Name = name,
+                    ObjType = type,
+                    X = x,
+                    Y = y,
+                });
+            }
 
             return output;
         }

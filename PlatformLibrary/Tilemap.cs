@@ -17,6 +17,8 @@ namespace PlatformLibrary
         // An array of all tile layers in the tilemap
         TilemapLayer[] layers;
 
+        TilemapObject[] objects;
+
         // The width of the map, measured in tiles
         uint mapWidth;
         
@@ -42,22 +44,21 @@ namespace PlatformLibrary
         /// <param name="tileHeight">The heigh of the tiles, in pixels</param>
         /// <param name="layers">The layers of the map</param>
         /// <param name="tiles">The tiles of the map</param>
-        public Tilemap(uint mapWidth, uint mapHeight, uint tileWidth, uint tileHeight, TilemapLayer[] layers, Tile[] tiles)
+        public Tilemap(uint mapWidth, uint mapHeight, uint tileWidth, uint tileHeight, TilemapLayer[] layers, TilemapObject[] objects, Tile[] tiles)
         {
             this.mapWidth = mapWidth;
             this.mapHeight = mapHeight;
             this.tileWidth = tileWidth;
             this.tileHeight = tileHeight;
             this.layers = layers;
+            this.objects = objects;
             this.tiles = tiles;
         }
 
         public Vector2 GetStartingPosition()
         {
-            var layer = layers[0];
-            System.Diagnostics.Debug.WriteLine(layer.Data[0].ToString());
-            //Vector2 startingPosition = layer.Data[0].ToString();
-            return Vector2.Zero;
+            var obj = objects[0];
+            return new Vector2(obj.X, obj.Y);
         }
 
         #endregion

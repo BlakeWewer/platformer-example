@@ -52,6 +52,7 @@
     <Compile Include="Tile.cs" />
     <Compile Include="Tilemap.cs" />
     <Compile Include="TileMapLayer.cs" />
+    <Compile Include="TilemapObject.cs" />
     <Compile Include="TilemapReader.cs" />
     <Compile Include="Tileset.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

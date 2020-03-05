@@ -43,6 +43,11 @@ namespace PlatformerContentExtension
                 layer.Data = dataIds.ToArray();
             }
 
+            foreach(TilemapObjectContent obj in input.Objects)
+            {
+                
+            }
+
             // The tileset has been processed
             return input;
         }

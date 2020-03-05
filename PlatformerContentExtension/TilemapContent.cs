@@ -30,6 +30,8 @@ namespace PlatformerContentExtension
         public List<TilemapTileset> Tilesets = new List<TilemapTileset>();
 
         public List<TilemapLayerContent> Layers = new List<TilemapLayerContent>();
+
+        public List<TilemapObjectContent> Objects = new List<TilemapObjectContent>();
     
     }
 }

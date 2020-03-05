@@ -29,12 +29,13 @@ namespace PlatformerExample
         List<Platform> platforms;
         Platform curPlatform;
         AxisList world;
-        KeyboardState oldKS;
-        KeyboardState newKS;
         float deathY = 600;
         Random random = new Random();
         SpriteFont font;
         int score = 0;
+        double curPlatformTimer = 0;
+        bool platform_warning = false;
+        bool platform_gone = false;
         Texture2D death;
 
         public Game1()
@@ -84,8 +85,8 @@ namespace PlatformerExample
 
             // Load the level
             tilemap = Content.Load<Tilemap>("level1");
-            Vector2 x = tilemap.GetStartingPosition();
-            player = new Player(playerFrames, new Vector2(350, 375));
+            Vector2 startingPos = tilemap.GetStartingPosition();
+            player = new Player(playerFrames, startingPos);
 
             platforms.Add(new Platform(new BoundingRectangle(280, 500, 84, 21), sheet[1]));
             platforms.Add(new Platform(new BoundingRectangle(80, 300, 105, 21), sheet[1]));
@@ -136,17 +137,26 @@ namespace PlatformerExample
                 p.Update(gameTime);
                 if (player.Position.Y + 100 < p.Position.Y && player.verticalState == VerticalMovementState.OnGround)
                 {
-                    PlatformShift(p);
+                    PlatformShift(p, gameTime);
                     return;
                 }
                 Debug.WriteLine($"{p.Position}\t{p.Velocity}");
             }
             curPlatform = platforms[0];
             curPlatform.Velocity = Vector2.Zero;
+
+            if(gameTime.TotalGameTime.TotalMilliseconds - curPlatformTimer > 2000)
+            {
+                platform_warning = true;
+            }
+            if (gameTime.TotalGameTime.TotalMilliseconds - curPlatformTimer > 3000)
+            {
+                platform_gone = true;
+            }
             base.Update(gameTime);
         }
 
-        public void PlatformShift(Platform p)
+        public void PlatformShift(Platform p, GameTime gameTime)
         {
             deathY = p.bounds.Y;
             platforms.Add(new Platform(new BoundingRectangle((float)random.Next(0, 400 - (int)p.bounds.Width), platforms[2].Position.Y - 200,
@@ -155,6 +165,9 @@ namespace PlatformerExample
             score++;
             p.bounds.X = -1000;
             platforms.Remove(p);
+            curPlatformTimer = gameTime.TotalGameTime.TotalMilliseconds;
+            platform_warning = false;
+            platform_gone = false;
         }
 
         /// <summary>
@@ -179,11 +192,25 @@ namespace PlatformerExample
                     spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, t);
 
                     // Draw the platforms 
-                    foreach (Platform platform in platforms)
+                    for(int i = 1; i < platforms.Count; i++)
                     {
-                        platform.Draw(spriteBatch);
+                        platforms[i].Draw(spriteBatch);
                     }
                     Debug.WriteLine($"{platforms.Count()} Platforms rendered");
+                    if(platform_gone)
+                    {
+                        curPlatform.Position.X = 500;
+                        curPlatform.bounds.X = 500;
+                        //curPlatform.bounds.Y = curPlatform.Position.Y;
+                    }
+                    else if(platform_warning)
+                    {
+                        curPlatform.Draw(spriteBatch, Color.Red);
+                    }
+                    else
+                    {
+                        curPlatform.Draw(spriteBatch);
+                    }
 
                     // Draw the player
                     player.Draw(spriteBatch);

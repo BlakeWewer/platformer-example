@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace PlatformLibrary
 {
-    public class TilemapLayer
+    public class TilemapObject
     {
-        public uint[] Data;
+        public uint X;
+        public uint Y;
 
-        public int TileCount => Data.Length;
-
-        public TilemapLayer(uint[] data)
+        public TilemapObject(uint x, uint y)
         {
-            Data = data;
+            X = x;
+            Y = y;
         }
     }
 }
